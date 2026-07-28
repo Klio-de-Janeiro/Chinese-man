@@ -1,3 +1,4 @@
+#include <bit>
 #include <cstdint>
 #include <string>
 
@@ -69,6 +70,7 @@ py::dict state_snapshot(const cd::GameState& state) {
     snapshot["attack_count"] = state.attack_count;
     snapshot["attack_limit"] = state.attack_limit;
     snapshot["deck_count"] = state.deck_count();
+    snapshot["discard_count"] = std::popcount(state.discard);
     snapshot["trump"] = state.trump;
     snapshot["transfer_locked"] = state.transfer_locked;
     snapshot["take_declared"] = state.take_declared;

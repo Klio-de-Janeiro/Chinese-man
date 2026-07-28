@@ -15,6 +15,7 @@ def test_python_engine_smoke() -> None:
 
     assert state["phase"] == durak.Phase.OPENING_ATTACK
     assert state["dealer"] == 1
+    assert state["discard_count"] == 0
     assert len(state["players"]) == 2
     assert len(actions) == 6
 

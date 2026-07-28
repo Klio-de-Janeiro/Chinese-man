@@ -13,5 +13,7 @@ Set-Location $ProjectRoot
 & $CTest --preset native-debug
 & $Python -m pytest
 & $Python -m ruff check python apps/api
+npm run lint
+npm run test
 
 Write-Host "All checks passed."

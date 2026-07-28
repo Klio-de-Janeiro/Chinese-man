@@ -1,21 +1,32 @@
 services:
-  postgres:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-chinese_durak}
-      POSTGRES_USER: ${POSTGRES_USER:-chinese_durak}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      VITE_PUBLIC_GAME_HOST: ${PUBLIC_GAME_HOST:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: chinese_durak
+      POSTGRES_USER: chinese_durak
+      POSTGRES_PASSWORD: chinese_durak
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
         - CMD-SHELL
-        - "pg_isready -U ${POSTGRES_USER:-chinese_durak} -d ${POSTGRES_DB:-chinese_durak}"
+        - pg_isready -U chinese_durak -d chinese_durak
       interval: 5s
       timeout: 5s
       retries: 10
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
   api:

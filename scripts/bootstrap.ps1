@@ -12,5 +12,6 @@ if (-not (Test-Path $Python)) {
 & $Python -m pip install --upgrade pip
 & $Python -m pip install --editable ".[dev]"
 & $Python -m pip install --requirement apps/api/requirements.txt
+npm ci
 
 Write-Host "Environment is ready."

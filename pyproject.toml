@@ -7,7 +7,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "chinese-durak-core"
-version = "0.1.0"
+version = "0.2.0"
 description = "C++ game engine and Python bindings for Chinese Durak"
 readme = "README.md"
 requires-python = ">=3.11"

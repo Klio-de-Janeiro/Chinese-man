@@ -1,6 +1,6 @@
 # Статус реализации
 
-Версия каркаса: `0.1.0`
+Версия приложения: `0.2.0`
 
 Версия правил: `chinese-durak/0.2.0-draft`
 
@@ -23,16 +23,21 @@
 - [x] PostgreSQL 17 в Docker Compose.
 - [x] PowerShell-команды для Windows.
 - [x] Копия принятой спецификации в `docs/spec`.
+- [x] Приватные комнаты на 2–3 игроков.
+- [x] REST create/join/reconnect API.
+- [x] WebSocket-синхронизация.
+- [x] Персональные состояния без утечки чужих рук.
+- [x] `expectedVersion` для конкурентных команд.
+- [x] Пауза и reconnect timeout 120 секунд.
+- [x] Адаптивный web-интерфейс Modern Arena.
+- [x] LAN-запуск web + API через Docker Compose.
 
 ## Не готово
 
-- [ ] Постоянные комнаты.
-- [ ] REST API лобби.
-- [ ] WebSocket игровой сессии.
+- [ ] Постоянные комнаты в PostgreSQL.
 - [ ] Транзакционная запись действий.
-- [ ] Персональный `PlayerView`.
-- [ ] Переподключение.
-- [ ] Frontend.
+- [ ] Восстановление после перезапуска API.
+- [ ] Идемпотентный `clientActionId`.
 - [ ] Нагрузочные тесты.
 - [ ] Нейросеть.
 
@@ -48,9 +53,15 @@ Native engine (GCC 13.3, C++20):
 Python 3.12:
 - editable pybind11 build: passed
 - non-editable wheel build: passed
-- pytest: 4 passed
+- pytest: 7 passed
 - ruff: passed
 - compileall: passed
+
+Web:
+- ESLint: passed
+- Vinext production build: passed
+- Sites artifact validation: passed
+- rendered HTML test: passed
 
 Configuration:
 - pyproject.toml parse: passed
@@ -58,5 +69,5 @@ Configuration:
 
 Docker runtime:
 - not executed in the workspace because the Docker CLI/daemon is unavailable
-- compose.yaml and the wheel used by its builder stage were verified separately
+- compose.yaml, web build and API wheel were verified separately
 ```

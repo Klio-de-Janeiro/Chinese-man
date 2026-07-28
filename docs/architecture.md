@@ -1,19 +1,19 @@
-# Архитектура каркаса
+# Архитектура web-MVP
 
 ## Поток игрового действия
 
 ```text
-React-клиент
-    ↓ WebSocket action + expectedVersion
-FastAPI GameSession
-    ↓
+Vinext/React-клиент
+    ↓ REST: create/join + WebSocket: action/expectedVersion
+FastAPI RoomService
+    ↓ private PlayerView
 Python package chinese_durak
     ↓ pybind11
 C++ GameEngine
     ↓
 GameState + events
     ↓
-PostgreSQL snapshot + action log
+PostgreSQL snapshot + action log (следующий этап)
     ↓
 Персональные PlayerView
 ```
@@ -39,18 +39,31 @@ PostgreSQL snapshot + action log
 - Python bindings;
 - health/readiness API;
 - PostgreSQL в Docker Compose.
+- приватные комнаты на двух или трёх игроков;
+- токены игровых мест;
+- REST create/join/reconnect endpoints;
+- WebSocket broadcast с персональными состояниями;
+- optimistic concurrency через `expectedVersion`;
+- пауза и reconnect timeout 120 секунд;
+- адаптивный web-стол Modern Arena;
+- LAN-запуск через Docker Desktop.
+
+## Граница текущего milestone
+
+Комнаты находятся в памяти одного API-процесса. Это намеренное ограничение
+первого играбельного среза: оно позволяет проверить полный человек-человек
+цикл до проектирования схемы постоянного хранения.
 
 ## Следующий слой
 
 В следующем milestone необходимо реализовать:
 
-- модели комнат и игровых сессий;
 - миграции PostgreSQL;
 - транзакционный action log;
-- `expectedVersion` и `clientActionId`;
-- WebSocket-команды;
-- персональный `PlayerView`;
-- паузу и переподключение.
+- snapshots после каждого действия;
+- `clientActionId` и идемпотентность повторных команд;
+- восстановление комнат после перезапуска API;
+- технические результаты в постоянной модели партии.
 
 Эти функции должны использовать существующий `GameEngine`, не повторяя его
 правила на Python.

@@ -1,8 +1,14 @@
 .git
 .venv
-build
+build/native-debug
+build/native-release
+build/python
 dist
 wheelhouse
+node_modules
+.next
+.sites-runtime
+.wrangler
 __pycache__
 .pytest_cache
 .ruff_cache
