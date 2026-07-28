@@ -1,0 +1,52 @@
+[build-system]
+requires = [
+    "pybind11>=2.13",
+    "scikit-build-core>=0.10"
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "chinese-durak-core"
+version = "0.1.0"
+description = "C++ game engine and Python bindings for Chinese Durak"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [
+    { name = "Klio" }
+]
+
+[project.optional-dependencies]
+dev = [
+    "cmake>=3.25",
+    "httpx>=0.27,<1",
+    "ninja>=1.11",
+    "pytest>=8,<9",
+    "ruff>=0.9,<1"
+]
+
+[tool.scikit-build]
+cmake.source-dir = "."
+cmake.args = [
+    "-DCHINESE_DURAK_BUILD_TESTS=OFF",
+    "-DCHINESE_DURAK_BUILD_PYTHON=ON"
+]
+wheel.packages = ["python/chinese_durak"]
+build-dir = "build/python/{wheel_tag}"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "python/tests",
+    "apps/api/tests"
+]
+pythonpath = [
+    "apps/api"
+]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 79
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

@@ -1,0 +1,13 @@
+build/
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.egg-info/
+*.py[cod]
+*.pyd
+*.so
+.env
+dist/
+wheelhouse/
+coverage/

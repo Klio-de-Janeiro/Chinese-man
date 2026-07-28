@@ -1,0 +1,1 @@
+"""Chinese Durak API package."""
