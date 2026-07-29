@@ -1,3 +1,5 @@
+import type { SuitName } from "./cards";
+
 export type RoomStatus = "waiting" | "paused" | "playing" | "finished";
 
 export type ConnectionStatus =
@@ -57,7 +59,8 @@ export type GameView = {
   attackLimit: number;
   deckCount: number;
   discardCount: number;
-  trump: "clubs" | "diamonds" | "hearts" | "spades";
+  trump: SuitName;
+  trumpCard: number;
   transferLocked: boolean;
   takeDeclared: boolean;
   draw: boolean;

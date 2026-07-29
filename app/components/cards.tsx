@@ -1,7 +1,11 @@
 import type { CSSProperties } from "react";
-import { useMemo } from "react";
 
-import { cardValue, SUITS } from "../game/cards";
+import {
+  cardLabel,
+  cardValue,
+  type SuitName,
+  SUIT_NAMES,
+} from "../game/cards";
 
 export function Card({
   card,
@@ -17,23 +21,18 @@ export function Card({
   onClick?: () => void;
 }) {
   const value = cardValue(card);
-
-  return (
-    <button
-      type="button"
-      className={[
-        "playing-card",
-        compact ? "playing-card--compact" : "",
-        value.red ? "playing-card--red" : "",
-        selected ? "playing-card--selected" : "",
-        legal ? "playing-card--legal" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      onClick={onClick}
-      disabled={!onClick}
-      aria-label={`Карта ${value.rank}${value.suit}`}
-    >
+  const className = [
+    "playing-card",
+    compact ? "playing-card--compact" : "",
+    value.red ? "playing-card--red" : "",
+    selected ? "playing-card--selected" : "",
+    legal ? "playing-card--legal" : "",
+    onClick ? "" : "playing-card--disabled",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const contents = (
+    <>
       <span className="playing-card__corner">
         <strong>{value.rank}</strong>
         <span>{value.suit}</span>
@@ -43,7 +42,30 @@ export function Card({
         <strong>{value.rank}</strong>
         <span>{value.suit}</span>
       </span>
-    </button>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={className}
+        onClick={onClick}
+        aria-label={`Карта ${value.rank}${value.suit}`}
+      >
+        {contents}
+      </button>
+    );
+  }
+
+  return (
+    <span
+      className={className}
+      role="img"
+      aria-label={`Карта ${value.rank}${value.suit}`}
+    >
+      {contents}
+    </span>
   );
 }
 
@@ -59,28 +81,53 @@ export function CardBack({ index }: { index: number }) {
   );
 }
 
-export function SuitPresence({ hand }: { hand: number[] }) {
-  const present = useMemo(
-    () => new Set(hand.map((card) => Math.floor(card / 13))),
-    [hand],
-  );
-
+export function SuitSelector({
+  cards,
+  trump,
+  selectedCard,
+  legalCards,
+  onSelect,
+}: {
+  cards: number[];
+  trump: SuitName;
+  selectedCard: number | null;
+  legalCards: Set<number>;
+  onSelect: (card: number) => void;
+}) {
   return (
-    <span className="suit-presence" aria-label="Масти в вашей руке">
-      {SUITS.map((suit, index) => (
-        <span
-          key={suit}
-          className={[
-            "suit-presence__item",
-            present.has(index) ? "is-present" : "",
-            index === 1 || index === 2 ? "is-red" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          {suit}
-        </span>
-      ))}
+    <span className="suit-presence" aria-label="Масти этого достоинства">
+      {cards.map((card) => {
+        const value = cardValue(card);
+        const isLegal = legalCards.has(card);
+        const isTrump = value.suit === SUIT_NAMES[trump];
+
+        return (
+          <button
+            type="button"
+            key={card}
+            className={[
+              "suit-presence__item",
+              value.red ? "is-red" : "",
+              isTrump ? "is-trump" : "",
+              selectedCard === card ? "is-selected" : "",
+              isLegal ? "is-legal" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            disabled={!isLegal}
+            onClick={() => onSelect(card)}
+            aria-label={[
+              cardLabel(card),
+              isTrump ? "козырь" : "",
+              isLegal ? "можно сыграть" : "сейчас сыграть нельзя",
+            ]
+              .filter(Boolean)
+              .join(", ")}
+          >
+            {value.suit}
+          </button>
+        );
+      })}
     </span>
   );
 }

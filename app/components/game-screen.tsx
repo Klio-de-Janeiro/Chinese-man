@@ -1,13 +1,18 @@
 import { useState } from "react";
 
-import { cardLabel, SUIT_NAMES } from "../game/cards";
+import {
+  cardLabel,
+  cardValue,
+  groupHandByRank,
+  SUIT_NAMES,
+} from "../game/cards";
 import type {
   ConnectionStatus,
   LegalAction,
   PlayerView,
   Snapshot,
 } from "../game/types";
-import { Card, CardBack, SuitPresence } from "./cards";
+import { Card, CardBack, SuitSelector } from "./cards";
 
 export function GameScreen({
   snapshot,
@@ -50,7 +55,13 @@ export function GameScreen({
   const you = snapshot.players.find((player) => player.isYou);
   const opponents = snapshot.players.filter((player) => !player.isYou);
   const hand = you?.hand ?? [];
+  const handGroups = groupHandByRank(hand, game.trump);
   const legalActions = game.legalActions;
+  const legalCards = new Set(
+    legalActions.flatMap((action) =>
+      action.card === null ? [] : [action.card],
+    ),
+  );
   const cardActions = legalActions.filter(
     (action) => action.card === selectedCard,
   );
@@ -172,7 +183,7 @@ export function GameScreen({
                 : ""
             }
           >
-            {SUIT_NAMES[game.trump]}
+            {SUIT_NAMES[game.trump]} {cardValue(game.trumpCard).rank}
           </strong>
         </div>
 
@@ -366,19 +377,41 @@ export function GameScreen({
             </div>
 
             <div className="your-hand">
-              {hand.map((card) => {
-                const isLegal = legalActions.some(
-                  (action) => action.card === card,
+              {handGroups.map((group) => {
+                const firstLegalCard = group.cards.find((card) =>
+                  legalCards.has(card),
                 );
+                const displayedCard =
+                  selectedCard !== null &&
+                  group.cards.includes(selectedCard)
+                    ? selectedCard
+                    : (firstLegalCard ?? group.representativeCard);
+                const isLegal = legalCards.has(displayedCard);
 
                 return (
-                  <div className="hand-card" key={card}>
-                    <SuitPresence hand={hand} />
+                  <div
+                    className={[
+                      "hand-card",
+                      group.containsTrump ? "hand-card--trump" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    key={group.rankIndex}
+                  >
+                    <SuitSelector
+                      cards={group.cards}
+                      trump={game.trump}
+                      selectedCard={selectedCard}
+                      legalCards={legalCards}
+                      onSelect={chooseCard}
+                    />
                     <Card
-                      card={card}
-                      selected={selectedCard === card}
-                      legal={isLegal}
-                      onClick={isLegal ? () => chooseCard(card) : undefined}
+                      card={displayedCard}
+                      selected={selectedCard === displayedCard}
+                      legal={group.cards.some((card) => legalCards.has(card))}
+                      onClick={
+                        isLegal ? () => chooseCard(displayedCard) : undefined
+                      }
                     />
                   </div>
                 );

@@ -50,6 +50,19 @@ async def receive_snapshot(
             return payload
 
 
+async def expect_pong(socket: ClientConnection) -> None:
+    """Verify the heartbeat message used by the browser."""
+
+    await socket.send(json.dumps({"type": "ping"}))
+
+    async with asyncio.timeout(8):
+        while True:
+            payload = json.loads(await socket.recv())
+
+            if payload.get("type") == "pong":
+                return
+
+
 async def run(api_url: str) -> None:
     """Create a room, connect two sockets, and apply one legal move."""
 
@@ -88,6 +101,7 @@ async def run(api_url: str) -> None:
             proxy=None,
         ) as host_socket:
             await receive_snapshot(host_socket, status="waiting")
+            await expect_pong(host_socket)
 
             joined = await client.post(
                 f"/api/rooms/{host['roomId']}/join",

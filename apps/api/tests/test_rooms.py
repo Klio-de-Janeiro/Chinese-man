@@ -49,6 +49,14 @@ async def test_private_room_starts_and_hides_opponent_hand() -> None:
 
     assert host_view["room"]["status"] == "playing"
     assert host_view["game"]["version"] == 1
+    trump_card = host_view["game"]["trumpCard"]
+    assert isinstance(trump_card, int)
+    assert host_view["game"]["trump"] == (
+        "clubs",
+        "diamonds",
+        "hearts",
+        "spades",
+    )[trump_card // 13]
     assert len(host_view["players"][0]["hand"]) == 6
     assert "hand" not in host_view["players"][1]
     assert len(guest_view["players"][1]["hand"]) == 6
@@ -92,3 +100,21 @@ async def test_action_version_rejects_stale_command() -> None:
             expected_version=state["version"],
             payload=action,
         )
+
+
+@pytest.mark.anyio
+async def test_ping_returns_pong() -> None:
+    """Keep the heartbeat contract used by the browser reconnect loop."""
+
+    service = RoomService()
+    room, host = await service.create_room("Klio", 2)
+    socket = FakeWebSocket()
+
+    await service.handle_message(
+        room,
+        host,
+        socket,  # type: ignore[arg-type]
+        {"type": "ping"},
+    )
+
+    assert socket.messages == [{"type": "pong"}]

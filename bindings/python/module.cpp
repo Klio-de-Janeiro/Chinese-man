@@ -72,6 +72,7 @@ py::dict state_snapshot(const cd::GameState& state) {
     snapshot["deck_count"] = state.deck_count();
     snapshot["discard_count"] = std::popcount(state.discard);
     snapshot["trump"] = state.trump;
+    snapshot["trump_card"] = state.trump_card;
     snapshot["transfer_locked"] = state.transfer_locked;
     snapshot["take_declared"] = state.take_declared;
     snapshot["draw"] = state.draw;

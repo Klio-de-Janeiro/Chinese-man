@@ -506,6 +506,7 @@ class RoomService:
             "deckCount": state["deck_count"],
             "discardCount": state["discard_count"],
             "trump": SUIT_NAMES[state["trump"]],
+            "trumpCard": state["trump_card"],
             "transferLocked": state["transfer_locked"],
             "takeDeclared": state["take_declared"],
             "draw": state["draw"],

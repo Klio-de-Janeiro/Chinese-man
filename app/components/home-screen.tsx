@@ -182,7 +182,7 @@ export function HomeScreen({
       </section>
 
       <footer className="home-footer">
-        <span>Правила: chinese-durak/0.2.0-draft</span>
+        <span>Правила: chinese-durak/0.2.1-draft</span>
         <span>Без аккаунтов · приватная ссылка · reconnect 120 сек.</span>
       </footer>
     </main>

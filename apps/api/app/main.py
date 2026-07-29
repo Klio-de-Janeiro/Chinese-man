@@ -21,7 +21,7 @@ room_service = RoomService()
 
 app = FastAPI(
     title="Chinese Durak API",
-    version="0.2.0",
+    version="0.2.4",
 )
 
 app.add_middleware(

@@ -21,6 +21,22 @@ export const SUIT_NAMES = {
   diamonds: "♦",
   hearts: "♥",
   spades: "♠",
+} as const;
+
+export type SuitName = keyof typeof SUIT_NAMES;
+
+const SUIT_ORDER: SuitName[] = [
+  "clubs",
+  "diamonds",
+  "hearts",
+  "spades",
+];
+
+export type HandRankGroup = {
+  rankIndex: number;
+  cards: number[];
+  containsTrump: boolean;
+  representativeCard: number;
 };
 
 export function cardValue(card: number): {
@@ -39,4 +55,41 @@ export function cardValue(card: number): {
 export function cardLabel(card: number): string {
   const value = cardValue(card);
   return `${value.rank}${value.suit}`;
+}
+
+export function groupHandByRank(
+  hand: number[],
+  trump: SuitName,
+): HandRankGroup[] {
+  const trumpSuitIndex = SUIT_ORDER.indexOf(trump);
+  const cardsByRank = new Map<number, number[]>();
+
+  for (const card of hand) {
+    const rankIndex = card % 13;
+    const cards = cardsByRank.get(rankIndex) ?? [];
+    cards.push(card);
+    cardsByRank.set(rankIndex, cards);
+  }
+
+  return Array.from(cardsByRank, ([rankIndex, cards]) => {
+    const sortedCards = [...cards].sort(
+      (left, right) => Math.floor(left / 13) - Math.floor(right / 13),
+    );
+    const trumpCard = sortedCards.find(
+      (card) => Math.floor(card / 13) === trumpSuitIndex,
+    );
+
+    return {
+      rankIndex,
+      cards: sortedCards,
+      containsTrump: trumpCard !== undefined,
+      representativeCard: trumpCard ?? sortedCards[0],
+    };
+  }).sort((left, right) => {
+    if (left.containsTrump !== right.containsTrump) {
+      return left.containsTrump ? -1 : 1;
+    }
+
+    return left.rankIndex - right.rankIndex;
+  });
 }

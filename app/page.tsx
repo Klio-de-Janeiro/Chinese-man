@@ -12,6 +12,8 @@ import { GameScreen } from "./components/game-screen";
 import { HomeScreen } from "./components/home-screen";
 import { LobbyScreen } from "./components/lobby-screen";
 import { DEMO_SNAPSHOT } from "./game/demo";
+import { createRequestId } from "./game/request-id";
+import { decodeSocketMessage } from "./game/socket-protocol";
 import type {
   ConnectionStatus,
   Credentials,
@@ -137,19 +139,19 @@ export default function Home() {
       };
 
       socket.onmessage = (event) => {
-        const payload = JSON.parse(event.data) as
-          | Snapshot
-          | {
-              type: "error";
-              error: { message: string };
-            };
+        const message = decodeSocketMessage(event.data);
 
-        if (payload.type === "snapshot") {
-          setSnapshot(payload);
-          return;
+        switch (message.kind) {
+          case "snapshot":
+            setSnapshot(message.snapshot);
+            return;
+          case "pong":
+            return;
+          case "error":
+          case "invalid":
+            setError(message.message);
+            return;
         }
-
-        setError(payload.error.message);
       };
 
       socket.onclose = () => {
@@ -284,7 +286,7 @@ export default function Home() {
     socketRef.current.send(
       JSON.stringify({
         type: "action",
-        requestId: crypto.randomUUID(),
+        requestId: createRequestId(),
         expectedVersion: snapshot.game.version,
         action,
       }),

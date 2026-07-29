@@ -867,7 +867,8 @@ input:focus-visible {
     opacity 150ms ease-out;
 }
 
-.playing-card:disabled {
+.playing-card:disabled,
+.playing-card--disabled {
   opacity: 0.62;
 }
 
@@ -1100,27 +1101,60 @@ input:focus-visible {
   gap: 3px;
 }
 
+.hand-card--trump .playing-card {
+  border-color: rgba(94, 234, 212, 0.52);
+  box-shadow:
+    0 14px 24px rgba(0, 0, 0, 0.28),
+    0 0 18px rgba(34, 211, 197, 0.1);
+}
+
 .suit-presence {
   display: flex;
-  min-height: 16px;
-  gap: 3px;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .suit-presence__item {
-  color: #526478;
-  font-size: 10px;
-  opacity: 0.48;
-}
-
-.suit-presence__item.is-present {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: rgba(34, 211, 197, 0.08);
   color: var(--teal-light);
-  opacity: 1;
-  text-shadow: 0 0 8px rgba(34, 211, 197, 0.45);
+  font-size: 12px;
+  opacity: 0.72;
 }
 
-.suit-presence__item.is-present.is-red {
+.suit-presence__item.is-red {
+  background: rgba(255, 107, 107, 0.08);
   color: var(--coral);
-  text-shadow: 0 0 8px rgba(255, 107, 107, 0.35);
+}
+
+.suit-presence__item.is-trump {
+  border-color: rgba(94, 234, 212, 0.58);
+  opacity: 1;
+  box-shadow: 0 0 10px rgba(34, 211, 197, 0.2);
+}
+
+.suit-presence__item.is-legal {
+  opacity: 1;
+  cursor: pointer;
+  text-shadow: 0 0 8px currentColor;
+}
+
+.suit-presence__item.is-legal:hover,
+.suit-presence__item.is-selected {
+  border-color: currentColor;
+  transform: translateY(-1px);
+}
+
+.suit-presence__item:disabled {
+  cursor: default;
 }
 
 .activity-panel {

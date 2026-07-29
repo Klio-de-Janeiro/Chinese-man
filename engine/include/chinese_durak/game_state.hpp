@@ -72,6 +72,7 @@ struct GameState {
     std::uint8_t passed_attackers = 0;
     std::uint8_t attack_count = 0;
     std::uint8_t attack_limit = 0;
+    CardId trump_card = kInvalidCard;
     Suit trump = Suit::Clubs;
     Phase phase = Phase::WaitingForPlayers;
     bool transfer_locked = false;

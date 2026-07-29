@@ -13,20 +13,20 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     environment:
-      POSTGRES_DB: chinese_durak
-      POSTGRES_USER: chinese_durak
-      POSTGRES_PASSWORD: chinese_durak
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_DB: ${POSTGRES_DB:-chinese_durak}
+      POSTGRES_USER: ${POSTGRES_USER:-chinese_durak}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
     healthcheck:
       test:
         - CMD-SHELL
-        - pg_isready -U chinese_durak -d chinese_durak
+        - "pg_isready -U ${POSTGRES_USER:-chinese_durak} -d ${POSTGRES_DB:-chinese_durak}"
       interval: 5s
       timeout: 5s
       retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
   api:
@@ -35,7 +35,7 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://chinese_durak:change_me@postgres:5432/chinese_durak}
-      RULES_VERSION: chinese-durak/0.2.0-draft
+      RULES_VERSION: chinese-durak/0.2.1-draft
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -54,3 +54,10 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  default:
+    name: chinese_durak_network
+    ipam:
+      config:
+        - subnet: 10.250.0.0/24

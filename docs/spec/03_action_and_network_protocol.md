@@ -1,6 +1,6 @@
 # Действия и сетевой протокол
 
-Версия: `0.2.0-draft`
+Версия: `0.2.1-draft`
 
 ## 1. Принцип
 
@@ -225,7 +225,7 @@ C отправляет ATTACK для версии 42
 {
   "gameId": "0198f0cf-8ac6-7bd9-934d-7f929c4d9112",
   "version": 18,
-  "rulesVersion": "chinese-durak/0.2.0-draft",
+  "rulesVersion": "chinese-durak/0.2.1-draft",
   "phase": "defense",
   "viewerPlayerId": "player-b",
   "currentActorId": "player-b",

@@ -17,14 +17,23 @@ if ($LanAddress) {
 }
 
 docker compose up --build --detach
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Docker Compose failed to start. Check the error above."
+}
+
 docker compose ps
 
+if ($LASTEXITCODE -ne 0) {
+    throw "Docker Compose status check failed."
+}
+
 Write-Host ""
-Write-Host "Игра на этом компьютере:"
+Write-Host "Game on this computer:"
 Write-Host "  http://localhost:3000"
 
 if ($LanAddress) {
     Write-Host ""
-    Write-Host "Ссылка для игроков в локальной сети:"
+    Write-Host "Link for players on the local network:"
     Write-Host "  http://${LanAddress}:3000"
 }

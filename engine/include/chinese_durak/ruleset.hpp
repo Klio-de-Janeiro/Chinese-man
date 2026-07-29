@@ -7,7 +7,7 @@ namespace chinese_durak {
 
 struct RuleSet {
     static constexpr std::string_view kVersion =
-        "chinese-durak/0.2.0-draft";
+        "chinese-durak/0.2.1-draft";
 
     std::uint8_t initial_hand_size = 6;
     std::uint8_t max_attacks = 6;

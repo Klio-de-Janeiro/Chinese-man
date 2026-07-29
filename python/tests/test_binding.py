@@ -2,7 +2,7 @@ import chinese_durak as durak
 
 
 def test_rules_version() -> None:
-    assert durak.RULES_VERSION == "chinese-durak/0.2.0-draft"
+    assert durak.RULES_VERSION == "chinese-durak/0.2.1-draft"
 
 
 def test_python_engine_smoke() -> None:

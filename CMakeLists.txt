@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(
     chinese_durak
-    VERSION 0.2.0
+    VERSION 0.2.4
     DESCRIPTION "Authoritative engine for Chinese Durak"
     LANGUAGES CXX
 )

@@ -26,7 +26,7 @@ async def test_health() -> None:
     assert response.json() == {
         "status": "ok",
         "engine": "available",
-        "rulesVersion": "chinese-durak/0.2.0-draft",
+        "rulesVersion": "chinese-durak/0.2.1-draft",
     }
 
 

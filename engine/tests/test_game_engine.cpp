@@ -21,6 +21,7 @@ using chinese_durak::Rank;
 using chinese_durak::Suit;
 using chinese_durak::beats;
 using chinese_durak::card_bit;
+using chinese_durak::is_valid_card;
 using chinese_durak::kDeckSize;
 using chinese_durak::make_card;
 using chinese_durak::rank_of;
@@ -153,6 +154,21 @@ bool state_is_consistent(const GameState& state) {
     ) == 0;
 }
 
+[[nodiscard]]
+CardMask table_cards(const GameState& state) {
+    CardMask cards = 0;
+
+    for (std::uint8_t slot = 0; slot < state.attack_count; ++slot) {
+        cards |= card_bit(state.table[slot].attack);
+
+        if (state.table[slot].covered()) {
+            cards |= card_bit(state.table[slot].defense);
+        }
+    }
+
+    return cards;
+}
+
 void test_card_rules() {
     const CardId seven_clubs =
         make_card(Suit::Clubs, Rank::Seven);
@@ -188,6 +204,15 @@ void test_initial_state() {
     expect(state.dealer == 1, "dealer must be stored in game state");
     expect(state.deck_count() == 34, "three players leave 34 cards");
     expect(state.version == 1, "initial state version must be one");
+    expect(is_valid_card(state.trump_card), "trump card must be valid");
+    expect(
+        state.trump_card == state.deck.back(),
+        "trump card must be the last card in the deck"
+    );
+    expect(
+        suit_of(state.trump_card) == state.trump,
+        "trump card and trump suit must agree"
+    );
     expect(
         state.phase == Phase::OpeningAttack,
         "game must start with opening attack"
@@ -378,6 +403,94 @@ void test_successful_defense_round() {
     expect(scenario_found, "a deterministic defense scenario must exist");
 }
 
+void test_take_collects_accumulated_discard() {
+    bool scenario_found = false;
+
+    for (std::uint64_t seed = 0; seed < 1000; ++seed) {
+        GameEngine candidate;
+        candidate.start(2, seed);
+
+        const std::uint8_t attacker = candidate.state().main_attacker;
+        const std::uint8_t defender = candidate.state().defender;
+
+        for (const Action& attack : candidate.legal_actions(attacker)) {
+            GameEngine attempt = candidate;
+            attempt.apply(attacker, attack);
+            const auto defenses = attempt.legal_actions(defender);
+
+            if (!contains_kind(defenses, ActionKind::Defend)) {
+                continue;
+            }
+
+            attempt.apply(
+                defender,
+                first_action(defenses, ActionKind::Defend)
+            );
+            attempt.apply(attacker, Action::pass_attack());
+
+            const CardMask accumulated_discard = attempt.state().discard;
+            const std::uint8_t next_attacker =
+                attempt.state().main_attacker;
+            const std::uint8_t taking_player = attempt.state().defender;
+            const Action next_attack = first_action(
+                attempt.legal_actions(next_attacker),
+                ActionKind::Attack
+            );
+
+            attempt.apply(next_attacker, next_attack);
+
+            const CardMask hand_before =
+                attempt.state().players[taking_player].hand;
+            const CardMask expected_hand =
+                hand_before
+                | accumulated_discard
+                | table_cards(attempt.state());
+            const CardMask hand_after_take =
+                hand_before | accumulated_discard;
+
+            attempt.apply(taking_player, Action::take());
+
+            expect(
+                attempt.state().discard == 0,
+                "take action must immediately empty the discard"
+            );
+            expect(
+                attempt.state().players[taking_player].hand
+                    == hand_after_take,
+                "take action must immediately collect the discard"
+            );
+
+            attempt.apply(next_attacker, Action::pass_attack());
+
+            expect(
+                attempt.state().discard == 0,
+                "resolved take must keep the discard empty"
+            );
+            expect(
+                attempt.state().players[taking_player].hand
+                    == expected_hand,
+                "taking player must receive the table and discard"
+            );
+            expect(
+                state_is_consistent(attempt.state()),
+                "taking accumulated discard must preserve invariants"
+            );
+
+            scenario_found = true;
+            break;
+        }
+
+        if (scenario_found) {
+            break;
+        }
+    }
+
+    expect(
+        scenario_found,
+        "a deterministic accumulated-discard scenario must exist"
+    );
+}
+
 void test_transfer() {
     bool scenario_found = false;
 
@@ -503,6 +616,7 @@ int main() {
     test_first_attacker_fallback();
     test_take_round();
     test_successful_defense_round();
+    test_take_collects_accumulated_discard();
     test_transfer();
     test_illegal_action();
     test_random_legal_play();

@@ -64,7 +64,8 @@ void GameEngine::start(
     }
 
     deal_initial_hands();
-    state_.trump = suit_of(state_.deck.back());
+    state_.trump_card = state_.deck.back();
+    state_.trump = suit_of(state_.trump_card);
     select_first_attacker();
     state_.round_starter = state_.main_attacker;
     state_.defender = next_active_player(state_.main_attacker);
@@ -336,6 +337,9 @@ void GameEngine::apply_transfer(
 }
 
 void GameEngine::apply_take() {
+    PlayerState& player = state_.players[state_.defender];
+    player.hand |= state_.discard;
+    state_.discard = 0;
     state_.take_declared = true;
     state_.passed_attackers = 0;
 
@@ -372,16 +376,17 @@ void GameEngine::apply_pass(std::uint8_t player) {
 
 void GameEngine::resolve_take() {
     const std::uint8_t taking_player = state_.defender;
+    PlayerState& player = state_.players[taking_player];
 
     for (std::uint8_t slot = 0; slot < state_.attack_count; ++slot) {
         add_card(
-            state_.players[taking_player].hand,
+            player.hand,
             state_.table[slot].attack
         );
 
         if (state_.table[slot].covered()) {
             add_card(
-                state_.players[taking_player].hand,
+                player.hand,
                 state_.table[slot].defense
             );
         }

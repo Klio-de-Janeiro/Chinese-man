@@ -1,8 +1,8 @@
 # Статус реализации
 
-Версия приложения: `0.2.0`
+Версия приложения: `0.2.4`
 
-Версия правил: `chinese-durak/0.2.0-draft`
+Версия правил: `chinese-durak/0.2.1-draft`
 
 ## Готово
 
@@ -14,6 +14,7 @@
 - [x] Перевод до первой защиты.
 - [x] Обратный перевод вдвоём.
 - [x] Подкидывание после `TAKE`.
+- [x] Перенос накопленного отбоя в руку взявшего игрока.
 - [x] Конкурентные атакующие через множество `eligible_attackers`.
 - [x] Native-тесты без внешнего test framework.
 - [x] CMake и CTest.
@@ -31,6 +32,12 @@
 - [x] Пауза и reconnect timeout 120 секунд.
 - [x] Адаптивный web-интерфейс Modern Arena.
 - [x] LAN-запуск web + API через Docker Compose.
+- [x] Безопасный разбор `snapshot`, `pong` и `error` WebSocket-сообщений.
+- [x] PostgreSQL без конфликта с хостовым портом `5432`.
+- [x] UUID действий с fallback для LAN-браузеров без `crypto.randomUUID()`.
+- [x] Одна визуальная карта на достоинство с выбором масти.
+- [x] Козырные группы слева и сортировка по возрастанию.
+- [x] Масть и достоинство открытого козыря в игровом снимке.
 
 ## Не готово
 
@@ -53,7 +60,7 @@ Native engine (GCC 13.3, C++20):
 Python 3.12:
 - editable pybind11 build: passed
 - non-editable wheel build: passed
-- pytest: 7 passed
+- pytest: 5 passed
 - ruff: passed
 - compileall: passed
 
@@ -62,6 +69,8 @@ Web:
 - Vinext production build: passed
 - Sites artifact validation: passed
 - rendered HTML test: passed
+- Node tests: 12 passed
+- real HTTP + two-WebSocket smoke test, including ping/pong: passed
 
 Configuration:
 - pyproject.toml parse: passed

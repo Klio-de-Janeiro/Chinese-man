@@ -25,6 +25,6 @@ def get_settings() -> Settings:
         ),
         rules_version=getenv(
             "RULES_VERSION",
-            "chinese-durak/0.2.0-draft",
+            "chinese-durak/0.2.1-draft",
         ),
     )
