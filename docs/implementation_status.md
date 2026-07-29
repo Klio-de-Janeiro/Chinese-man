@@ -1,6 +1,6 @@
 # Статус реализации
 
-Версия приложения: `0.2.4`
+Версия приложения: `0.3.0`
 
 Версия правил: `chinese-durak/0.2.1-draft`
 
@@ -36,8 +36,19 @@
 - [x] PostgreSQL без конфликта с хостовым портом `5432`.
 - [x] UUID действий с fallback для LAN-браузеров без `crypto.randomUUID()`.
 - [x] Одна визуальная карта на достоинство с выбором масти.
-- [x] Козырные группы слева и сортировка по возрастанию.
+- [x] Сортировка `2 → A` и подсветка козыря внутри группы.
 - [x] Масть и достоинство открытого козыря в игровом снимке.
+- [x] Приватный ML-контракт без скрытых карт.
+- [x] Прямой self-play поверх C++-движка.
+- [x] Random, greedy и heuristic reference agents.
+- [x] Параллельная генерация Parquet-датасета.
+- [x] Policy-value сеть с динамическими legal actions.
+- [x] Imitation learning.
+- [x] PPO self-play с историческими checkpoints.
+- [x] Paired-seed evaluation со сменой мест.
+- [x] Проверяемый экспорт ONNX.
+- [x] ONNX Runtime с эвристическим fallback.
+- [x] Комнаты «человек против AI».
 
 ## Не готово
 
@@ -46,7 +57,8 @@
 - [ ] Восстановление после перезапуска API.
 - [ ] Идемпотентный `clientActionId`.
 - [ ] Нагрузочные тесты.
-- [ ] Нейросеть.
+- [ ] Обученные release-веса `bot_v1` после длительного GPU-run.
+- [ ] Автоматический model registry и promotion gate.
 
 ## Проверки milestone
 
@@ -60,9 +72,16 @@ Native engine (GCC 13.3, C++20):
 Python 3.12:
 - editable pybind11 build: passed
 - non-editable wheel build: passed
-- pytest: 5 passed
+- pytest: 19 passed, 1 optional PyTorch test skipped
 - ruff: passed
 - compileall: passed
+
+ML simulator:
+- 64 teacher games: 10,704 decisions in one Parquet shard
+- two-process generation: 16 games, 2,710 decisions, two valid shards
+- heuristic benchmark: 101.46 games/s and 8,833 decisions/s
+- full human-versus-AI room completion: passed
+- long PyTorch training and release ONNX export: not run in this workspace
 
 Web:
 - ESLint: passed

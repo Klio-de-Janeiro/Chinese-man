@@ -1083,14 +1083,38 @@ input:focus-visible {
 }
 
 .your-hand {
-  display: flex;
+  width: 100%;
   min-height: 150px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 4px 12px;
+  scrollbar-color: var(--border) rgba(8, 18, 31, 0.72);
+  scrollbar-gutter: stable;
+}
+
+.your-hand::-webkit-scrollbar {
+  height: 8px;
+}
+
+.your-hand::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(8, 18, 31, 0.72);
+}
+
+.your-hand::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(8, 18, 31, 0.72);
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.your-hand__track {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  min-height: 146px;
   align-items: flex-end;
   justify-content: center;
   gap: clamp(6px, 1vw, 12px);
-  overflow-x: auto;
-  padding: 4px 4px 10px;
-  scrollbar-color: var(--border) transparent;
 }
 
 .hand-card {
@@ -1379,10 +1403,6 @@ input:focus-visible {
 
   .your-zone {
     padding-inline: 8px;
-  }
-
-  .your-hand {
-    justify-content: flex-start;
   }
 
   .playing-card {

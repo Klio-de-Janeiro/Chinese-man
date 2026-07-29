@@ -5,6 +5,8 @@ export function HomeScreen({
   setNickname,
   playerCount,
   setPlayerCount,
+  playAgainstAi,
+  setPlayAgainstAi,
   roomCode,
   setRoomCode,
   inviteRoom,
@@ -19,6 +21,8 @@ export function HomeScreen({
   setNickname: (value: string) => void;
   playerCount: 2 | 3;
   setPlayerCount: (value: 2 | 3) => void;
+  playAgainstAi: boolean;
+  setPlayAgainstAi: (value: boolean) => void;
   roomCode: string;
   setRoomCode: (value: string) => void;
   inviteRoom: string | null;
@@ -139,8 +143,32 @@ export function HomeScreen({
                   </div>
                 </fieldset>
 
+                <fieldset>
+                  <legend>Состав стола</legend>
+                  <div className="segmented-control">
+                    <button
+                      type="button"
+                      className={!playAgainstAi ? "is-active" : ""}
+                      onClick={() => setPlayAgainstAi(false)}
+                    >
+                      С друзьями
+                    </button>
+                    <button
+                      type="button"
+                      className={playAgainstAi ? "is-active" : ""}
+                      onClick={() => setPlayAgainstAi(true)}
+                    >
+                      С AI
+                    </button>
+                  </div>
+                </fieldset>
+
                 <button className="primary-button" disabled={loading}>
-                  {loading ? "Создаём…" : "Создать приватную комнату"}
+                  {loading
+                    ? "Создаём…"
+                    : playAgainstAi
+                      ? "Начать игру с AI"
+                      : "Создать приватную комнату"}
                 </button>
               </form>
 

@@ -1,0 +1,10 @@
+generation:
+  output_dir: artifacts/ml/dataset
+  games: 20000
+  workers: 8
+  start_seed: 1
+  player_counts: [2, 3]
+  row_group_size: 16384
+  heuristic_probability: 0.8
+  greedy_probability: 0.15
+  random_probability: 0.05

@@ -85,11 +85,5 @@ export function groupHandByRank(
       containsTrump: trumpCard !== undefined,
       representativeCard: trumpCard ?? sortedCards[0],
     };
-  }).sort((left, right) => {
-    if (left.containsTrump !== right.containsTrump) {
-      return left.containsTrump ? -1 : 1;
-    }
-
-    return left.rankIndex - right.rankIndex;
-  });
+  }).sort((left, right) => left.rankIndex - right.rankIndex);
 }

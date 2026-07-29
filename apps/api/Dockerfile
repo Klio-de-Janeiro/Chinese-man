@@ -33,6 +33,7 @@ COPY --from=builder /wheelhouse /wheelhouse
 RUN python -m pip install /wheelhouse/*.whl
 
 COPY apps/api/app app
+COPY models models
 
 EXPOSE 8000
 

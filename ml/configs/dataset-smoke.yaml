@@ -1,0 +1,10 @@
+generation:
+  output_dir: artifacts/ml-smoke/dataset
+  games: 64
+  workers: 1
+  start_seed: 900001
+  player_counts: [2, 3]
+  row_group_size: 1024
+  heuristic_probability: 0.8
+  greedy_probability: 0.15
+  random_probability: 0.05

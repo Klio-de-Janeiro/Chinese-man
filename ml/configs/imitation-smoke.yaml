@@ -1,0 +1,20 @@
+imitation:
+  dataset_dir: artifacts/ml-smoke/dataset
+  output_dir: artifacts/ml-smoke/imitation
+  seed: 2026
+  epochs: 1
+  steps_per_epoch: 2
+  validation_steps: 1
+  batch_size: 32
+  num_workers: 0
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  value_coefficient: 0.5
+  max_grad_norm: 1.0
+  amp: false
+  model:
+    card_dim: 32
+    history_dim: 32
+    action_dim: 48
+    hidden_dim: 64
+    dropout: 0.0

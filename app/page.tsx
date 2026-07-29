@@ -63,6 +63,7 @@ async function responseJson<T>(response: Response): Promise<T> {
 export default function Home() {
   const [nickname, setNickname] = useState("Klio");
   const [playerCount, setPlayerCount] = useState<2 | 3>(2);
+  const [playAgainstAi, setPlayAgainstAi] = useState(false);
   const [roomCode, setRoomCode] = useState("");
   const [inviteRoom, setInviteRoom] = useState<string | null>(null);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
@@ -221,6 +222,7 @@ export default function Home() {
         body: JSON.stringify({
           nickname,
           playerCount,
+          botCount: playAgainstAi ? playerCount - 1 : 0,
         }),
       });
       saveCredentials(await responseJson<Credentials>(response));
@@ -369,6 +371,8 @@ export default function Home() {
       setNickname={setNickname}
       playerCount={playerCount}
       setPlayerCount={setPlayerCount}
+      playAgainstAi={playAgainstAi}
+      setPlayAgainstAi={setPlayAgainstAi}
       roomCode={roomCode}
       setRoomCode={setRoomCode}
       inviteRoom={inviteRoom}

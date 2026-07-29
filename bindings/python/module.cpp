@@ -60,11 +60,13 @@ py::dict state_snapshot(const cd::GameState& state) {
 
     py::dict snapshot;
     snapshot["version"] = state.version;
+    snapshot["decision_count"] = state.decision_count;
     snapshot["phase"] = state.phase;
     snapshot["player_count"] = state.player_count;
     snapshot["dealer"] = state.dealer;
     snapshot["main_attacker"] = state.main_attacker;
     snapshot["defender"] = state.defender;
+    snapshot["round_starter"] = state.round_starter;
     snapshot["eligible_attackers"] = state.eligible_attackers;
     snapshot["passed_attackers"] = state.passed_attackers;
     snapshot["attack_count"] = state.attack_count;

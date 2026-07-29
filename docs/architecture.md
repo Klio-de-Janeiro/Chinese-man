@@ -1,4 +1,4 @@
-# Архитектура web-MVP
+# Архитектура web-MVP и AI
 
 ## Поток игрового действия
 
@@ -17,6 +17,18 @@ PostgreSQL snapshot + action log (следующий этап)
     ↓
 Персональные PlayerView
 ```
+
+## Нейросетевой соперник
+
+Нейросеть находится за тем же приватным контрактом, что и браузер игрока.
+`RoomService` строит наблюдение только для места бота, получает от
+`GameEngine` разрешённые действия и передаёт модели их динамический список.
+Результат модели — индекс в этом списке, после чего движок повторно проверяет
+действие.
+
+Обучение работает напрямую через pybind11, без HTTP, WebSocket, React и
+PostgreSQL. Полная схема описана в
+[`ml_architecture.md`](ml_architecture.md).
 
 ## Что реализовано
 
@@ -39,6 +51,10 @@ PostgreSQL snapshot + action log (следующий этап)
 - Python bindings;
 - health/readiness API;
 - PostgreSQL в Docker Compose.
+- комнаты против AI;
+- эвристический fallback;
+- imitation learning и PPO self-play;
+- проверенный ONNX runtime.
 - приватные комнаты на двух или трёх игроков;
 - токены игровых мест;
 - REST create/join/reconnect endpoints;

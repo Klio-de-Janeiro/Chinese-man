@@ -7,7 +7,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "chinese-durak-core"
-version = "0.2.4"
+version = "0.3.0"
 description = "C++ game engine and Python bindings for Chinese Durak"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -24,6 +24,22 @@ dev = [
     "pytest>=8,<9",
     "ruff>=0.9,<1"
 ]
+ml = [
+    "numpy>=2.0,<3",
+    "onnx>=1.17,<2",
+    "onnxruntime>=1.20,<2",
+    "pyarrow>=18,<22",
+    "PyYAML>=6,<7",
+    "torch>=2.5,<3"
+]
+
+[project.scripts]
+chinese-durak-generate = "chinese_durak.ml.cli.generate_dataset:main"
+chinese-durak-benchmark = "chinese_durak.ml.cli.benchmark:main"
+chinese-durak-train-imitation = "chinese_durak.ml.cli.train_imitation:main"
+chinese-durak-train-ppo = "chinese_durak.ml.cli.train_ppo:main"
+chinese-durak-evaluate = "chinese_durak.ml.cli.evaluate:main"
+chinese-durak-export = "chinese_durak.ml.cli.export:main"
 
 [tool.scikit-build]
 cmake.source-dir = "."

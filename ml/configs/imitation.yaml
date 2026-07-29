@@ -1,0 +1,20 @@
+imitation:
+  dataset_dir: artifacts/ml/dataset
+  output_dir: artifacts/ml/imitation
+  seed: 2026
+  epochs: 10
+  steps_per_epoch: 2000
+  validation_steps: 200
+  batch_size: 256
+  num_workers: 4
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  value_coefficient: 0.5
+  max_grad_norm: 1.0
+  amp: true
+  model:
+    card_dim: 64
+    history_dim: 96
+    action_dim: 128
+    hidden_dim: 256
+    dropout: 0.1

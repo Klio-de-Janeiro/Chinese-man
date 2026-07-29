@@ -1,6 +1,7 @@
 from typing import Any
 
 from chinese_durak import RULES_VERSION
+from chinese_durak.ml.runtime import FallbackBotRuntime
 from fastapi import (
     FastAPI,
     HTTPException,
@@ -17,11 +18,18 @@ from .schemas import CreateRoomRequest, JoinRoomRequest
 from .settings import get_settings
 
 settings = get_settings()
-room_service = RoomService()
+bot_runtime = FallbackBotRuntime(
+    settings.bot_model_path,
+    settings.bot_metadata_path,
+)
+room_service = RoomService(
+    bot_runtime=bot_runtime,
+    bot_move_delay_seconds=settings.bot_move_delay_seconds,
+)
 
 app = FastAPI(
     title="Chinese Durak API",
-    version="0.2.4",
+    version="0.3.0",
 )
 
 app.add_middleware(
@@ -52,14 +60,22 @@ async def room_error_handler(
 
 
 @app.get("/health")
-async def health() -> dict[str, str]:
+async def health() -> dict[str, Any]:
     """Return process and native-engine health."""
 
     return {
         "status": "ok",
         "engine": "available",
         "rulesVersion": str(RULES_VERSION),
+        "bot": room_service.bot_status(),
     }
+
+
+@app.get("/api/bot/status")
+async def bot_status() -> dict[str, Any]:
+    """Return the active inference backend and release model version."""
+
+    return room_service.bot_status()
 
 
 @app.get("/ready")
@@ -90,6 +106,7 @@ async def create_room(
     room, seat = await room_service.create_room(
         request.nickname,
         request.player_count,
+        request.bot_count,
     )
     return room_service.credentials(room, seat)
 

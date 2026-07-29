@@ -12,6 +12,8 @@ node_modules
 __pycache__
 .pytest_cache
 .ruff_cache
+.uv-cache
+artifacts
 *.egg-info
 *.pyc
 .env

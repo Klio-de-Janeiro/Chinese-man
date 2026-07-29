@@ -36,6 +36,9 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://chinese_durak:change_me@postgres:5432/chinese_durak}
       RULES_VERSION: chinese-durak/0.2.1-draft
+      BOT_MODEL_PATH: /app/models/bot_v1.onnx
+      BOT_METADATA_PATH: /app/models/bot_v1_metadata.json
+      BOT_MOVE_DELAY_MS: ${BOT_MOVE_DELAY_MS:-450}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -54,10 +57,3 @@ services:
 
 volumes:
   postgres_data:
-
-networks:
-  default:
-    name: chinese_durak_network
-    ipam:
-      config:
-        - subnet: 10.250.0.0/24

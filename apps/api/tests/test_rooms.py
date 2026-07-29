@@ -1,7 +1,10 @@
+from random import Random
 from typing import Any
 
 import pytest
 from app.rooms import RoomError, RoomService
+from chinese_durak.ml.agents import HeuristicAgent
+from chinese_durak.ml.observation import ObservationBuilder
 
 
 class FakeWebSocket:
@@ -118,3 +121,78 @@ async def test_ping_returns_pong() -> None:
     )
 
     assert socket.messages == [{"type": "pong"}]
+
+
+@pytest.mark.anyio
+async def test_ai_room_starts_and_preserves_private_hands() -> None:
+    """Run bot turns through the same private room projection."""
+
+    service = RoomService()
+    room, host = await service.create_room("Klio", 2, bot_count=1)
+    socket = FakeWebSocket()
+    await service.connect(
+        room,
+        host,
+        socket,  # type: ignore[arg-type]
+    )
+    snapshot = service.snapshot(room, host)
+
+    assert snapshot["room"]["status"] == "playing"
+    assert snapshot["room"]["connectedPlayers"] == 2
+    assert snapshot["players"][0]["isBot"] is False
+    assert snapshot["players"][1]["isBot"] is True
+    assert "hand" in snapshot["players"][0]
+    assert "hand" not in snapshot["players"][1]
+    assert snapshot["game"]["legalActions"]
+
+
+@pytest.mark.anyio
+async def test_room_rejects_an_all_bot_table() -> None:
+    """Require at least one authenticated human player."""
+
+    service = RoomService()
+
+    with pytest.raises(RoomError, match="хотя бы один человек"):
+        await service.create_room("Klio", 2, bot_count=2)
+
+
+@pytest.mark.anyio
+async def test_human_and_ai_can_finish_a_complete_game() -> None:
+    """Drive both seats until the authoritative engine reaches FINISHED."""
+
+    service = RoomService()
+    room, host = await service.create_room("Klio", 2, bot_count=1)
+    await service.connect(
+        room,
+        host,
+        FakeWebSocket(),  # type: ignore[arg-type]
+    )
+    builder = ObservationBuilder()
+    agent = HeuristicAgent()
+    random = Random(123)
+    human_decisions = 0
+
+    while room.status == "playing":
+        assert room.engine is not None
+        state = room.engine.state
+        legal_actions = room.engine.legal_actions(host.index)
+        assert legal_actions
+        observation = builder.build(
+            state,
+            host.index,
+            legal_actions,
+            room.public_history,
+        )
+        action_index = agent.choose_action(observation, random)
+        await service.apply_action(
+            room,
+            host,
+            expected_version=state["version"],
+            payload=service._serialize_action(
+                legal_actions[action_index]
+            ),
+        )
+        human_decisions += 1
+        assert human_decisions < 500
+
+    assert room.status == "finished"

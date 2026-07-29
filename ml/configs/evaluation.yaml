@@ -1,0 +1,17 @@
+evaluation:
+  checkpoint: artifacts/ml/ppo/last.pt
+  output_path: artifacts/ml/evaluation/report.json
+  seed: 50000
+  games_per_seat: 2000
+  player_counts: [2, 3]
+  deterministic: true
+
+export:
+  checkpoint: artifacts/ml/ppo/last.pt
+  model_path: models/bot_v1.onnx
+  metadata_path: models/bot_v1_metadata.json
+  model_version: bot_v1
+  opset: 18
+  tolerance: 0.0001
+  evaluation_report: artifacts/ml/evaluation/report.json
+  minimum_heuristic_win_rate: 0.6

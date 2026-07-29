@@ -6,6 +6,7 @@ import asyncio
 import secrets
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from random import Random
 from typing import Any
 
 from chinese_durak import (
@@ -18,6 +19,12 @@ from chinese_durak import (
     Suit,
     card_name,
 )
+from chinese_durak.ml.agents import HeuristicAgent
+from chinese_durak.ml.constants import MAX_HISTORY
+from chinese_durak.ml.contracts import PublicAction
+from chinese_durak.ml.native import action_from_native, phase_name
+from chinese_durak.ml.observation import ObservationBuilder
+from chinese_durak.ml.runtime import FallbackBotRuntime
 from fastapi import WebSocket
 
 ROOM_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -80,6 +87,7 @@ class PlayerSeat:
     nickname: str
     token: str
     index: int
+    is_bot: bool = False
     connections: set[WebSocket] = field(default_factory=set)
     disconnect_task: asyncio.Task[None] | None = None
 
@@ -87,7 +95,7 @@ class PlayerSeat:
     def connected(self) -> bool:
         """Return whether at least one browser owns the live seat."""
 
-        return bool(self.connections)
+        return self.is_bot or bool(self.connections)
 
 
 @dataclass
@@ -103,21 +111,45 @@ class GameRoom:
     seed: int | None = None
     technical_loser: str | None = None
     events: list[dict[str, str]] = field(default_factory=list)
+    public_history: list[PublicAction] = field(default_factory=list)
+    last_actor: int | None = None
+    bot_random: Random = field(default_factory=Random)
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    bot_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 class RoomService:
     """Coordinate room lifecycle, sockets, and engine commands."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        bot_runtime: FallbackBotRuntime | None = None,
+        bot_move_delay_seconds: float = 0.0,
+    ) -> None:
         """Initialize an empty process-local room registry."""
 
         self._rooms: dict[str, GameRoom] = {}
+        self._bot_runtime = bot_runtime or FallbackBotRuntime(
+            "models/bot_v1.onnx",
+            "models/bot_v1_metadata.json",
+        )
+        self._bot_move_delay_seconds = max(
+            0.0,
+            bot_move_delay_seconds,
+        )
+        self._observation_builder = ObservationBuilder()
+        self._heuristic_agent = HeuristicAgent()
+
+    def bot_status(self) -> dict[str, Any]:
+        """Return the inference backend selected at process startup."""
+
+        return self._bot_runtime.status
 
     async def create_room(
         self,
         nickname: str,
         player_count: int,
+        bot_count: int = 0,
     ) -> tuple[GameRoom, PlayerSeat]:
         """Create a private room and reserve its first seat."""
 
@@ -128,13 +160,22 @@ class RoomService:
                 "INVALID_PLAYER_COUNT",
                 "В комнате может быть два или три игрока.",
             )
+        if bot_count < 0 or bot_count >= player_count:
+            raise RoomError(
+                "INVALID_BOT_COUNT",
+                "В комнате должен остаться хотя бы один человек.",
+            )
 
         room_id = self._new_room_id()
         seat = self._new_seat(clean_nickname, index=0)
+        bots = [
+            self._new_bot_seat(index)
+            for index in range(1, bot_count + 1)
+        ]
         room = GameRoom(
             room_id=room_id,
             max_players=player_count,
-            players=[seat],
+            players=[seat, *bots],
             created_at=self._now(),
         )
         self._append_event(
@@ -142,7 +183,16 @@ class RoomService:
             "system",
             f"{clean_nickname} создал комнату.",
         )
+        for bot in bots:
+            self._append_event(
+                room,
+                "join",
+                f"{bot.nickname} занял место за столом.",
+            )
         self._rooms[room_id] = room
+        if len(room.players) == room.max_players:
+            self._start_game(room)
+            await self._advance_bots(room)
         return room, seat
 
     async def join_room(
@@ -195,6 +245,7 @@ class RoomService:
                 self._start_game(room)
 
         await self.broadcast(room)
+        await self._advance_bots(room)
         return room, seat
 
     def get_room(self, room_id: str) -> GameRoom:
@@ -241,6 +292,7 @@ class RoomService:
             "playerId": seat.player_id,
             "seatToken": seat.token,
             "maxPlayers": room.max_players,
+            "botCount": sum(player.is_bot for player in room.players),
             "rulesVersion": str(RULES_VERSION),
         }
 
@@ -260,6 +312,7 @@ class RoomService:
                 "index": player.index,
                 "nickname": player.nickname,
                 "connected": player.connected,
+                "isBot": player.is_bot,
                 "isYou": player.player_id == viewer.player_id,
                 "cardCount": 0,
                 "placement": 0,
@@ -327,6 +380,7 @@ class RoomService:
             f"{seat.nickname} в сети.",
         )
         await self.broadcast(room)
+        await self._advance_bots(room)
 
     async def disconnect(
         self,
@@ -339,7 +393,8 @@ class RoomService:
         seat.connections.discard(websocket)
 
         if (
-            not seat.connected
+            not seat.is_bot
+            and not seat.connected
             and room.status == "playing"
             and seat.disconnect_task is None
         ):
@@ -419,6 +474,7 @@ class RoomService:
                 )
 
             action = self._parse_action(payload)
+            action_phase = phase_name(state["phase"])
 
             try:
                 room.engine.apply(seat.index, action)
@@ -429,10 +485,11 @@ class RoomService:
                     status_code=409,
                 ) from error
 
-            self._append_event(
+            self._record_action(
                 room,
-                "action",
-                self._describe_action(seat, action),
+                seat,
+                action,
+                action_phase,
             )
 
             if room.engine.state["phase"] == Phase.FINISHED:
@@ -444,6 +501,7 @@ class RoomService:
                 )
 
         await self.broadcast(room)
+        await self._advance_bots(room)
 
     async def broadcast(self, room: GameRoom) -> None:
         """Send a private snapshot to every connected seat."""
@@ -467,6 +525,9 @@ class RoomService:
             seed=room.seed,
             dealer=0,
         )
+        room.public_history.clear()
+        room.last_actor = None
+        room.bot_random = Random(room.seed)
         room.status = "playing"
         self._append_event(
             room,
@@ -521,6 +582,116 @@ class RoomService:
             "legalActions": legal_actions,
             "technicalLoser": room.technical_loser,
         }
+
+    async def _advance_bots(self, room: GameRoom) -> None:
+        """Run scheduled bot turns until a human decision is required."""
+
+        async with room.bot_lock:
+            while room.status == "playing" and room.engine is not None:
+                async with room.lock:
+                    actor = self._next_actor(room)
+                    if actor is None or not room.players[actor].is_bot:
+                        return
+
+                if self._bot_move_delay_seconds:
+                    await asyncio.sleep(self._bot_move_delay_seconds)
+
+                async with room.lock:
+                    actor = self._next_actor(room)
+                    if actor is None or not room.players[actor].is_bot:
+                        return
+                    if room.engine is None:
+                        return
+
+                    state = room.engine.state
+                    native_actions = room.engine.legal_actions(actor)
+                    observation = self._observation_builder.build(
+                        state,
+                        actor,
+                        native_actions,
+                        room.public_history,
+                    )
+                    action_index = self._bot_runtime.choose_action(
+                        observation,
+                        room.bot_random,
+                    )
+                    if (
+                        action_index < 0
+                        or action_index >= len(native_actions)
+                    ):
+                        action_index = self._heuristic_agent.choose_action(
+                            observation,
+                            room.bot_random,
+                        )
+                    action = native_actions[action_index]
+                    action_phase = phase_name(state["phase"])
+                    room.engine.apply(actor, action)
+                    self._record_action(
+                        room,
+                        room.players[actor],
+                        action,
+                        action_phase,
+                    )
+                    if room.engine.state["phase"] == Phase.FINISHED:
+                        room.status = "finished"
+                        self._append_event(
+                            room,
+                            "system",
+                            "Партия завершена.",
+                        )
+
+                await self.broadcast(room)
+
+    def _next_actor(self, room: GameRoom) -> int | None:
+        """Choose one legal actor with deterministic round-robin fairness."""
+
+        if room.engine is None:
+            return None
+        state = room.engine.state
+        if state["phase"] == Phase.FINISHED:
+            return None
+        player_count = int(state["player_count"])
+        legal_players = {
+            player
+            for player in range(player_count)
+            if room.engine.legal_actions(player)
+        }
+        if not legal_players:
+            return None
+        start = (
+            int(state["main_attacker"])
+            if room.last_actor is None
+            else (room.last_actor + 1) % player_count
+        )
+        for offset in range(player_count):
+            candidate = (start + offset) % player_count
+            if candidate in legal_players:
+                return candidate
+        return None
+
+    def _record_action(
+        self,
+        room: GameRoom,
+        seat: PlayerSeat,
+        action: Action,
+        action_phase: str,
+    ) -> None:
+        """Append public replay data after a successful engine action."""
+
+        room.public_history.append(
+            PublicAction(
+                actor=seat.index,
+                phase=action_phase,
+                action=action_from_native(action),
+            )
+        )
+        room.public_history = room.public_history[-MAX_HISTORY:]
+        room.last_actor = seat.index
+        self._append_event(
+            room,
+            "action",
+            self._describe_action(seat, action),
+        )
 
     def _parse_action(self, payload: Any) -> Action:
         """Convert a JSON action into the bound C++ value object."""
@@ -669,6 +840,18 @@ class RoomService:
             nickname=nickname,
             token=secrets.token_urlsafe(32),
             index=index,
+        )
+
+    @staticmethod
+    def _new_bot_seat(index: int) -> PlayerSeat:
+        """Create one internal AI-controlled room seat."""
+
+        return PlayerSeat(
+            player_id=secrets.token_hex(8),
+            nickname=f"AI {index}",
+            token=secrets.token_urlsafe(32),
+            index=index,
+            is_bot=True,
         )
 
     @staticmethod

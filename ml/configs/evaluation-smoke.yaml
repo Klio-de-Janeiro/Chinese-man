@@ -1,0 +1,17 @@
+evaluation:
+  checkpoint: artifacts/ml-smoke/ppo/last.pt
+  output_path: artifacts/ml-smoke/evaluation/report.json
+  seed: 910000
+  games_per_seat: 4
+  player_counts: [2, 3]
+  deterministic: true
+
+export:
+  checkpoint: artifacts/ml-smoke/ppo/last.pt
+  model_path: artifacts/ml-smoke/models/bot_smoke.onnx
+  metadata_path: artifacts/ml-smoke/models/bot_smoke_metadata.json
+  model_version: bot_smoke
+  opset: 18
+  tolerance: 0.0001
+  evaluation_report: artifacts/ml-smoke/evaluation/report.json
+  minimum_heuristic_win_rate: 0.0

@@ -15,6 +15,12 @@ class CreateRoomRequest(BaseModel):
         default=2,
         alias="playerCount",
     )
+    bot_count: int = Field(
+        default=0,
+        ge=0,
+        le=2,
+        alias="botCount",
+    )
 
 
 class JoinRoomRequest(BaseModel):

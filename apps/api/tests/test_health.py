@@ -23,11 +23,11 @@ async def test_health() -> None:
         response = await client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "status": "ok",
-        "engine": "available",
-        "rulesVersion": "chinese-durak/0.2.1-draft",
-    }
+    payload = response.json()
+    assert payload["status"] == "ok"
+    assert payload["engine"] == "available"
+    assert payload["rulesVersion"] == "chinese-durak/0.2.1-draft"
+    assert payload["bot"]["backend"] in {"heuristic", "onnx"}
 
 
 @pytest.mark.anyio
@@ -66,3 +66,27 @@ async def test_room_http_flow_preserves_private_hands() -> None:
     assert state["room"]["status"] == "paused"
     assert len(state["players"][0]["hand"]) == 6
     assert "hand" not in state["players"][1]
+
+
+@pytest.mark.anyio
+async def test_http_room_can_start_against_ai() -> None:
+    """Create a full room with one human and one internal bot."""
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as client:
+        created = await client.post(
+            "/api/rooms",
+            json={
+                "nickname": "Klio",
+                "playerCount": 2,
+                "botCount": 1,
+            },
+        )
+
+    assert created.status_code == 201
+    credentials = created.json()
+    assert credentials["botCount"] == 1

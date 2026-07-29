@@ -20,6 +20,7 @@ export type Credentials = {
   playerId: string;
   seatToken: string;
   maxPlayers: 2 | 3;
+  botCount: number;
   rulesVersion: string;
 };
 
@@ -40,6 +41,7 @@ export type PlayerView = {
   index: number;
   nickname: string;
   connected: boolean;
+  isBot: boolean;
   isYou: boolean;
   cardCount: number;
   hand?: number[];

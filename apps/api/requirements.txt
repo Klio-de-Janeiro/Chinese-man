@@ -1,4 +1,6 @@
 asyncpg>=0.29,<1
 fastapi>=0.115,<1
+numpy>=2.0,<3
+onnxruntime>=1.20,<2
 sqlalchemy>=2.0,<3
 uvicorn[standard]>=0.30,<1

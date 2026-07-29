@@ -223,7 +223,10 @@ export function GameScreen({
                       opponent.connected ? "is-online" : "is-offline"
                     }
                   />
-                  <small>{roleFor(opponent)}</small>
+                  <small>
+                    {opponent.isBot ? "AI · " : ""}
+                    {roleFor(opponent)}
+                  </small>
                 </div>
                 <div className="opponent-hand">
                   {Array.from({
@@ -377,45 +380,47 @@ export function GameScreen({
             </div>
 
             <div className="your-hand">
-              {handGroups.map((group) => {
-                const firstLegalCard = group.cards.find((card) =>
-                  legalCards.has(card),
-                );
-                const displayedCard =
-                  selectedCard !== null &&
-                  group.cards.includes(selectedCard)
-                    ? selectedCard
-                    : (firstLegalCard ?? group.representativeCard);
-                const isLegal = legalCards.has(displayedCard);
+              <div className="your-hand__track">
+                {handGroups.map((group) => {
+                  const firstLegalCard = group.cards.find((card) =>
+                    legalCards.has(card),
+                  );
+                  const displayedCard =
+                    selectedCard !== null &&
+                    group.cards.includes(selectedCard)
+                      ? selectedCard
+                      : (firstLegalCard ?? group.representativeCard);
+                  const isLegal = legalCards.has(displayedCard);
 
-                return (
-                  <div
-                    className={[
-                      "hand-card",
-                      group.containsTrump ? "hand-card--trump" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    key={group.rankIndex}
-                  >
-                    <SuitSelector
-                      cards={group.cards}
-                      trump={game.trump}
-                      selectedCard={selectedCard}
-                      legalCards={legalCards}
-                      onSelect={chooseCard}
-                    />
-                    <Card
-                      card={displayedCard}
-                      selected={selectedCard === displayedCard}
-                      legal={group.cards.some((card) => legalCards.has(card))}
-                      onClick={
-                        isLegal ? () => chooseCard(displayedCard) : undefined
-                      }
-                    />
-                  </div>
-                );
-              })}
+                  return (
+                    <div
+                      className={[
+                        "hand-card",
+                        group.containsTrump ? "hand-card--trump" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      key={group.rankIndex}
+                    >
+                      <SuitSelector
+                        cards={group.cards}
+                        trump={game.trump}
+                        selectedCard={selectedCard}
+                        legalCards={legalCards}
+                        onSelect={chooseCard}
+                      />
+                      <Card
+                        card={displayedCard}
+                        selected={selectedCard === displayedCard}
+                        legal={group.cards.some((card) => legalCards.has(card))}
+                        onClick={
+                          isLegal ? () => chooseCard(displayedCard) : undefined
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>

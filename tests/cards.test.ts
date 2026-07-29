@@ -12,7 +12,7 @@ test("groups cards with the same rank into one visual group", () => {
   assert.equal(groups[0].containsTrump, true);
 });
 
-test("places trump groups first and sorts them by ascending rank", () => {
+test("sorts every rank in ascending order without moving trumps left", () => {
   const groups = groupHandByRank(
     [
       16, // 5♦
@@ -33,11 +33,11 @@ test("places trump groups first and sorts them by ascending rank", () => {
     })),
     [
       { rank: 0, trump: true },
+      { rank: 1, trump: false },
+      { rank: 3, trump: false },
       { rank: 5, trump: true },
       { rank: 7, trump: true },
       { rank: 12, trump: true },
-      { rank: 1, trump: false },
-      { rank: 3, trump: false },
     ],
   );
 });
